@@ -36,9 +36,9 @@
 
   .th-region {
     background: #fff;
-    width: calc(var(--sw) * 72px);           /* 横向：--sw */
+    width: calc(var(--sw) * 130px);           /* 横向：--sw */
     border-bottom: 2px solid #d1d5db;
-    font-size: calc(var(--sh) * 13px);       /* 纵向：--sh */
+    font-size: calc(var(--sh) * 10px);       /* 纵向：--sh，略小 */
     font-weight: 700;
     color: #1f2937;
     text-align: left;
@@ -49,7 +49,7 @@
 
   .th-metric {
     background: #fff; color: #1f2937;
-    font-size: calc(var(--sh) * 13px);       /* 纵向：--sh */
+    font-size: calc(var(--sh) * 10px);       /* 纵向：--sh */
     font-weight: 700;
     text-align: center; vertical-align: bottom;
     padding: calc(var(--sh) * 8px) calc(var(--sw) * 8px) calc(var(--sh) * 10px);
@@ -362,8 +362,8 @@ document.addEventListener('mousemove', e => {
 /* ── Rescale：--sw 由容器宽度驱动，--sh 由窗口高度驱动，完全独立 ── */
 const scaler   = document.getElementById('scaler');
 const page     = document.getElementById('page');
-const NATURAL_W = 1080;  /* 基准宽度 */
-const NATURAL_H = 340;   /* 基准高度（自然内容高度估算值） */
+const NATURAL_W = 1400;  /* 基准宽度 */
+const NATURAL_H = 520;   /* 基准高度 */
 
 function rescale() {
   const sw = Math.max(0.3, Math.min(scaler.offsetWidth  / NATURAL_W, 3));
