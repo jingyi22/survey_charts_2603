@@ -5,168 +5,111 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; font-family: 'Segoe UI', Arial, sans-serif; background: #fff; }
+  body { display: flex; align-items: stretch; justify-content: center; padding: 14px; }
 
-  html, body {
-    height: 100%;
-    font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
-    background: #fff;
-  }
-  body {
-    display: flex;
-    align-items: stretch;
-    justify-content: center;
-    padding: 16px;
-  }
-
-  /* Scaler fills full viewport width & height */
   .scaler {
-    flex: 1;
-    max-width: 1200px;
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-    min-height: 0;
+    flex: 1; max-width: 1400px;
+    display: flex; flex-direction: column; min-width: 0; min-height: 0;
   }
-
-  /* Page fills scaler */
   .page {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    background: #fff;
-    padding: 14px 18px 10px;
-    min-height: 0;
-    overflow: hidden;
+    flex: 1; display: flex; flex-direction: column;
+    background: #fff; padding: 12px 16px 10px; min-height: 0; overflow: hidden;
   }
+  .heatmap-wrap { flex: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
 
-  /* Heatmap fills remaining space */
-  .heatmap-wrap {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-    overflow: hidden;
-  }
+  /* ── Table ── */
+  table { width: 100%; height: 100%; border-collapse: collapse; table-layout: fixed; }
 
-  /* Table fills heatmap-wrap */
-  table {
-    width: 100%;
-    height: 100%;
-    border-collapse: collapse;
-    table-layout: fixed;
-  }
-
-  /* ── Header ── */
+  /* Scenario label column */
   .th-empty {
-    width: calc(var(--sw,1) * 200px);
-    border-bottom: 2px solid #d1d5db;
-    background: #fff;
+    width: calc(var(--sw,1) * 130px);
+    border-bottom: 2px solid #d1d5db; background: #fff;
   }
+
+  /* Response-type group headers (row 1) */
   .th-type {
-    font-size: calc(var(--sw,1) * 13px);
-    font-weight: 700;
-    text-align: center;
-    vertical-align: bottom;
-    padding: calc(var(--sh,1) * 5px) calc(var(--sw,1) * 8px) calc(var(--sh,1) * 10px);
-    border-left: 2px solid #e5e7eb;
-    border-bottom: 2px solid #d1d5db;
+    font-size: calc(var(--sw,1) * 11px); font-weight: 700;
+    text-align: center; vertical-align: middle;
+    padding: calc(var(--sh,1) * 5px) 4px calc(var(--sh,1) * 5px);
+    border-left: 3px solid #fff;
+    border-bottom: 1px solid #e5e7eb;
     background: #fff;
-    cursor: pointer;
-    user-select: none;
-    transition: background 0.15s;
   }
-  .th-type:hover { background: #f9fafb; }
   .th-ai { color: #1e40af; border-top: 3px solid #3b82f6; }
   .th-ei { color: #92400e; border-top: 3px solid #f59e0b; }
   .th-hu { color: #9f1239; border-top: 3px solid #f43f5e; }
 
-  /* ── Scenario label cells ── */
+  /* Region sub-headers (row 2) */
+  .th-region {
+    font-size: calc(var(--sw,1) * 9px); font-weight: 700;
+    text-align: center; vertical-align: bottom;
+    padding: calc(var(--sh,1) * 3px) 2px calc(var(--sh,1) * 5px);
+    color: #6b7280;
+    border-bottom: 2px solid #d1d5db;
+  }
+  .th-region.sep { border-left: 3px solid #fff; }
+
+  /* Scenario label */
   .scenario-cell {
-    font-size: calc(var(--sw,1) * 11.5px);
-    font-weight: 600;
-    color: #374151;
-    padding: 0 calc(var(--sw,1) * 10px) 0 0;
-    vertical-align: middle;
-    border-top: 1px solid #e5e7eb;
-    background: #fff;
-    line-height: 1.3;
-    overflow: hidden;
+    font-size: calc(var(--sw,1) * 10px); font-weight: 600; color: #374151;
+    padding: 0 calc(var(--sw,1) * 8px) 0 0;
+    vertical-align: middle; border-top: 1px solid #e5e7eb;
+    background: #fff; line-height: 1.3; overflow: hidden;
   }
 
-  /* ── Data cells ── */
+  /* Data cells */
   td.cell {
-    text-align: center;
-    vertical-align: middle;
-    border-left: 2px solid rgba(255,255,255,0.4);
+    text-align: center; vertical-align: middle;
     border-top: 1px solid rgba(255,255,255,0.25);
-    cursor: pointer;
+    border-left: 1px solid rgba(255,255,255,0.3);
+    cursor: pointer; overflow: hidden;
     transition: filter 0.12s, opacity 0.12s;
     position: relative;
-    overflow: hidden;
   }
-  td.cell:hover   { filter: brightness(1.12) saturate(1.2); z-index: 2; }
-  td.cell.dimmed  { opacity: 0.22; }
-  td.cell.locked-highlight { outline: 3px solid rgba(255,255,255,0.9); outline-offset: -3px; z-index: 3; }
+  td.cell.sep-left { border-left: 3px solid #fff; }
+  td.cell:hover    { filter: brightness(1.13) saturate(1.2); z-index: 2; }
+  td.cell.dimmed   { opacity: 0.2; }
+  td.cell.hl-cell  { outline: 2px solid rgba(255,255,255,0.9); outline-offset: -2px; z-index: 3; }
 
-  /* Numbers — controlled by --sw only so text stays readable */
-  .cell-pct { font-size: calc(var(--sw,1) * 17px); font-weight: 800; display: block; letter-spacing: -0.3px; }
-  .cell-cnt { font-size: calc(var(--sw,1) * 10px); display: block; margin-top: 2px; opacity: 0.75; }
+  .cell-pct { font-size: calc(var(--sw,1) * 10px); font-weight: 700; display: block; }
+  .cell-cnt { font-size: calc(var(--sw,1) * 7.5px); display: block; margin-top: 1px; opacity: 0.72; }
 
   /* ── Tooltip ── */
-  #tooltip {
-    position: fixed;
-    background: rgba(15,23,42,0.95);
-    color: #fff;
-    border-radius: 8px;
-    padding: 11px 15px;
-    font-size: 12px;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.12s;
-    z-index: 9999;
-    min-width: 200px;
-    line-height: 1.65;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+  #tip {
+    position: fixed; background: rgba(15,23,42,0.95); color: #fff;
+    border-radius: 8px; padding: 10px 14px; font-size: 12px;
+    pointer-events: none; opacity: 0; transition: opacity 0.12s;
+    z-index: 9999; min-width: 190px; line-height: 1.6;
+    box-shadow: 0 8px 28px rgba(0,0,0,0.35);
   }
-  #tooltip.show { opacity: 1; }
-  .tt-title  { font-weight: 700; font-size: 13px; border-bottom: 1px solid rgba(255,255,255,0.18); padding-bottom: 6px; margin-bottom: 7px; }
-  .tt-badge  { display: inline-block; border-radius: 3px; padding: 1px 7px; font-size: 11px; font-weight: 700; margin-bottom: 6px; }
-  .tt-total  { font-weight: 700; font-size: 14px; margin-bottom: 8px; }
-  .tt-divider{ border: none; border-top: 1px solid rgba(255,255,255,0.12); margin: 6px 0; }
-  .tt-sub    { font-size: 10px; color: #94a3b8; margin-bottom: 5px; letter-spacing: 0.03em; text-transform: uppercase; }
-  .tt-row    { display: flex; justify-content: space-between; gap: 14px; font-size: 11.5px; }
-  .tt-rlbl   { color: #94a3b8; }
-  .tt-lock   { font-size: 10px; color: #64748b; margin-top: 8px; text-align: center; }
+  #tip.show { opacity: 1; }
+  .tt-title { font-weight: 700; font-size: 12px; border-bottom: 1px solid rgba(255,255,255,0.18); padding-bottom: 5px; margin-bottom: 6px; }
+  .tt-badge { display: inline-block; border-radius: 3px; padding: 1px 7px; font-size: 10px; font-weight: 700; margin-bottom: 5px; }
+  .tt-row   { display: flex; justify-content: space-between; gap: 12px; font-size: 11px; }
+  .tt-lbl   { color: #94a3b8; }
+  .tt-lock  { font-size: 9px; color: #64748b; margin-top: 7px; text-align: center; }
 
-  /* ── Legend + footnote ── */
+  /* ── Bottom ── */
   .bottom-wrap { flex-shrink: 0; }
-  .legend {
-    display: flex;
-    gap: calc(var(--sw,1) * 16px);
-    margin-top: calc(var(--sh,1) * 8px);
-    align-items: center;
-    flex-wrap: wrap;
-  }
-  .legend-group { display: flex; align-items: center; gap: calc(var(--sw,1) * 5px); font-size: calc(var(--sw,1) * 11px); color: #374151; font-weight: 600; }
-  .legend-bar   { width: calc(var(--sw,1) * 50px); height: calc(var(--sw,1) * 8px); border-radius: 2px; flex-shrink: 0; }
+  .legend { display: flex; gap: calc(var(--sw,1) * 14px); margin-top: calc(var(--sh,1) * 7px); align-items: center; flex-wrap: wrap; }
+  .legend-group { display: flex; align-items: center; gap: calc(var(--sw,1) * 5px); font-size: calc(var(--sw,1) * 9px); color: #374151; font-weight: 600; }
+  .legend-bar { width: calc(var(--sw,1) * 42px); height: calc(var(--sw,1) * 7px); border-radius: 2px; flex-shrink: 0; }
   .lb-ai { background: linear-gradient(to right,#dbeafe,#1d4ed8); }
   .lb-ei { background: linear-gradient(to right,#fef9c3,#d97706); }
   .lb-hu { background: linear-gradient(to right,#ffe4e6,#e11d48); }
-  .legend-hint { font-size: calc(var(--sw,1) * 10px); color: #9ca3af; }
-  .footnote { font-size: calc(var(--sw,1) * 10px); color: #9ca3af; margin-top: calc(var(--sh,1) * 4px); }
+  .legend-hint { font-size: calc(var(--sw,1) * 8px); color: #9ca3af; }
+  .footnote { font-size: calc(var(--sw,1) * 8px); color: #9ca3af; margin-top: calc(var(--sh,1) * 4px); }
   .footnote b { color: #6b7280; }
 </style>
 </head>
 <body>
 
-<div id="tooltip">
+<div id="tip">
   <div class="tt-title" id="tt-title"></div>
-  <div id="tt-badge-wrap"></div>
-  <div class="tt-total" id="tt-total"></div>
-  <hr class="tt-divider">
-  <div class="tt-sub">By Region</div>
-  <div id="tt-regions"></div>
-  <div class="tt-lock">Click to pin · Click again or Esc to unpin</div>
+  <div id="tt-badge"></div>
+  <div id="tt-body"></div>
+  <div class="tt-lock">Click to pin · Esc to unpin</div>
 </div>
 
 <div class="scaler" id="scaler">
@@ -180,10 +123,10 @@
         <div class="legend-group"><div class="legend-bar lb-ai"></div>Prefer AI</div>
         <div class="legend-group"><div class="legend-bar lb-ei"></div>Either</div>
         <div class="legend-group"><div class="legend-bar lb-hu"></div>Prefer Human Agent</div>
-        <span class="legend-hint">| Hover for regional breakdown · Click to pin</span>
+        <span class="legend-hint">| Hover to inspect · Click to pin</span>
       </div>
       <p class="footnote">
-        <b>Total N = 1,076</b> &nbsp;|&nbsp; % of total respondents (n = count) &nbsp;|&nbsp;
+        <b>Total N = 1,076</b> &nbsp;|&nbsp; % of regional respondents (n = count) &nbsp;|&nbsp;
         GB = 140 · HK = 325 · SG = 100 · TH = 67 · JP = 299 · KR = 145
       </p>
     </div>
@@ -193,24 +136,22 @@
 <script>
 /* ── Data ── */
 const scenarios = [
-  { main: "Pre-Booking Inquiries"        },
-  { main: "Booking Process Issues"       },
-  { main: "Order Confirmation"           },
-  { main: "Mid-Trip Requests"            },
-  { main: "Pre-Trip Preparation"         },
-  { main: "Urgent Trip Issues"           },
-  { main: "Post-Trip Issues"             },
-  { main: "Complaints & Service Quality" }
+  "Pre-Booking Inquiries",
+  "Booking Process Issues",
+  "Order Confirmation",
+  "Mid-Trip Requests",
+  "Pre-Trip Preparation",
+  "Urgent Trip Issues",
+  "Post-Trip Issues",
+  "Complaints & Service Quality"
 ];
 const typeLabels  = ['Prefer AI', 'Either', 'Prefer Human Agent'];
-const typeCls     = ['th-ai', 'th-ei', 'th-hu'];
-const badgeColors = ['#1d4ed8', '#d97706', '#e11d48'];
+const badgeColors = ['#1d4ed8','#d97706','#e11d48'];
 const colorRanges = [
   [[219,234,254],[29,78,216]],
   [[254,249,195],[217,119,6]],
   [[255,228,230],[225,29,72]]
 ];
-const TOTAL_N = 1076;
 const regions = ['GB','HK','SG','TH','JP','KR'];
 const regionN = {GB:140,HK:325,SG:100,TH:67,JP:299,KR:145};
 const rawData = {
@@ -222,32 +163,38 @@ const rawData = {
   KR:[[[30.3,44],[29.7,43],[40.0,58]],[[15.9,23],[33.1,48],[51.0,74]],[[29.0,42],[34.5,50],[36.6,53]],[[9.7,14],[19.3,28],[71.0,103]],[[37.9,55],[31.7,46],[30.3,44]],[[5.5,8],[13.8,20],[80.7,117]],[[4.1,6],[17.2,25],[78.6,114]],[[7.6,11],[14.5,21],[77.9,113]]]
 };
 
-/* Aggregate across regions */
-const agg = scenarios.map((_,si) =>
-  [0,1,2].map(ti => {
-    const cnt = regions.reduce((s,r) => s + rawData[r][si][ti][1], 0);
-    return { cnt, pct: +(cnt / TOTAL_N * 100).toFixed(1) };
-  })
-);
-
 function cellBg(pct, ti) {
   const t = Math.min(pct,100)/100, [lo,hi] = colorRanges[ti];
   return `rgb(${Math.round(lo[0]+(hi[0]-lo[0])*t)},${Math.round(lo[1]+(hi[1]-lo[1])*t)},${Math.round(lo[2]+(hi[2]-lo[2])*t)})`;
 }
-const fg    = pct => pct >= 48 ? '#fff' : '#111827';
-const fgSub = pct => pct >= 48 ? 'rgba(255,255,255,0.78)' : 'rgba(0,0,0,0.45)';
+const fg    = pct => pct >= 50 ? '#fff' : '#111827';
+const fgSub = pct => pct >= 50 ? 'rgba(255,255,255,0.75)' : 'rgba(0,0,0,0.45)';
 
 /* ── Build table ── */
 const table = document.getElementById('htable');
+const thead = table.createTHead();
 
-// Header
-const hrow = table.createTHead().insertRow();
-const thE  = document.createElement('th'); thE.className = 'th-empty'; hrow.appendChild(thE);
-typeLabels.forEach((lbl,ti) => {
+// Row 1: response-type group headers
+const row1 = thead.insertRow();
+const thE1 = document.createElement('th');
+thE1.className = 'th-empty'; thE1.rowSpan = 2; row1.appendChild(thE1);
+[0,1,2].forEach(ti => {
   const th = document.createElement('th');
-  th.className = `th-type ${typeCls[ti]}`;
-  th.textContent = lbl; th.dataset.col = ti;
-  hrow.appendChild(th);
+  th.className = `th-type th-${['ai','ei','hu'][ti]}`;
+  th.colSpan = regions.length;
+  th.textContent = typeLabels[ti];
+  row1.appendChild(th);
+});
+
+// Row 2: region sub-headers
+const row2 = thead.insertRow();
+[0,1,2].forEach(ti => {
+  regions.forEach((r, ri) => {
+    const th = document.createElement('th');
+    th.className = 'th-region' + (ri === 0 ? ' sep' : '');
+    th.textContent = r;
+    row2.appendChild(th);
+  });
 });
 
 // Body
@@ -255,90 +202,87 @@ const tbody = table.createTBody();
 scenarios.forEach((sc, si) => {
   const tr   = tbody.insertRow();
   const tdSc = document.createElement('td');
-  tdSc.className   = 'scenario-cell';
-  tdSc.textContent = sc.main;
+  tdSc.className = 'scenario-cell'; tdSc.textContent = sc;
   tr.appendChild(tdSc);
+
   [0,1,2].forEach(ti => {
-    const {pct,cnt} = agg[si][ti];
-    const td = document.createElement('td');
-    td.className = 'cell';
-    td.style.background = cellBg(pct, ti);
-    td.dataset.row = si; td.dataset.col = ti;
-    td.innerHTML =
-      `<span class="cell-pct" style="color:${fg(pct)}">${pct.toFixed(1)}%</span>` +
-      `<span class="cell-cnt" style="color:${fgSub(pct)}">(n=${cnt})</span>`;
-    tr.appendChild(td);
+    regions.forEach((r, ri) => {
+      const [pct, cnt] = rawData[r][si][ti];
+      const td = document.createElement('td');
+      td.className = 'cell' + (ri === 0 ? ' sep-left' : '');
+      td.style.background = cellBg(pct, ti);
+      td.dataset.si = si; td.dataset.ti = ti; td.dataset.ri = ri;
+      td.innerHTML =
+        `<span class="cell-pct" style="color:${fg(pct)}">${pct.toFixed(1)}%</span>` +
+        `<span class="cell-cnt" style="color:${fgSub(pct)}">(${cnt})</span>`;
+      tr.appendChild(td);
+    });
   });
 });
 
-/* ── Tooltip ── */
-const tooltip   = document.getElementById('tooltip');
-const ttTitle   = document.getElementById('tt-title');
-const ttBadgeW  = document.getElementById('tt-badge-wrap');
-const ttTotal   = document.getElementById('tt-total');
-const ttRegions = document.getElementById('tt-regions');
-let locked = false, lockedSi = -1, lockedTi = -1;
+/* ── Interaction ── */
+const tip    = document.getElementById('tip');
+const ttTitle = document.getElementById('tt-title');
+const ttBadge = document.getElementById('tt-badge');
+const ttBody  = document.getElementById('tt-body');
+let locked = false, lSi = -1, lTi = -1, lRi = -1;
 
-function fillTip(si, ti) {
-  const {pct,cnt} = agg[si][ti];
-  ttTitle.textContent = scenarios[si].main;
-  ttBadgeW.innerHTML  = `<span class="tt-badge" style="background:${badgeColors[ti]}">${typeLabels[ti]}</span>`;
-  ttTotal.textContent = `Overall: ${pct.toFixed(1)}%  (n = ${cnt})`;
-  ttRegions.innerHTML = regions.map(r => {
-    const [rp,rc] = rawData[r][si][ti];
-    return `<div class="tt-row"><span class="tt-rlbl">${r} (N=${regionN[r]})</span><span>${rp.toFixed(1)}% (${rc})</span></div>`;
-  }).join('');
+function fillTip(si, ti, ri) {
+  const r = regions[ri];
+  const [pct, cnt] = rawData[r][si][ti];
+  ttTitle.textContent = scenarios[si];
+  ttBadge.innerHTML   = `<span class="tt-badge" style="background:${badgeColors[ti]}">${typeLabels[ti]}</span>`;
+  ttBody.innerHTML    =
+    `<div class="tt-row"><span class="tt-lbl">Region</span><span>${r} (N=${regionN[r]})</span></div>` +
+    `<div class="tt-row"><span class="tt-lbl">Share</span><span style="font-weight:700">${pct.toFixed(1)}%</span></div>` +
+    `<div class="tt-row"><span class="tt-lbl">Count</span><span>${cnt}</span></div>`;
 }
 function posTip(e) {
-  const tw = tooltip.offsetWidth + 24, th = tooltip.offsetHeight + 24;
-  tooltip.style.left = (e.clientX > innerWidth  - tw ? e.clientX - tw + 10 : e.clientX + 14) + 'px';
-  tooltip.style.top  = (e.clientY > innerHeight - th ? e.clientY - th + 10 : e.clientY + 14) + 'px';
+  const tw = tip.offsetWidth + 24, th = tip.offsetHeight + 24;
+  tip.style.left = (e.clientX > innerWidth  - tw ? e.clientX - tw + 10 : e.clientX + 14) + 'px';
+  tip.style.top  = (e.clientY > innerHeight - th ? e.clientY - th + 10 : e.clientY + 14) + 'px';
 }
-function applyHL(si, ti) {
+function applyHL(si, ti, ri) {
   document.querySelectorAll('td.cell').forEach(td => {
-    const r = +td.dataset.row, c = +td.dataset.col;
-    td.classList.toggle('dimmed', r !== si && c !== ti);
-    td.classList.toggle('locked-highlight', r === si && c === ti);
+    const s = +td.dataset.si, t = +td.dataset.ti, r = +td.dataset.ri;
+    td.classList.toggle('dimmed',  s !== si && t !== ti);
+    td.classList.toggle('hl-cell', s === si && t === ti && r === ri);
   });
 }
 function clearHL() {
-  document.querySelectorAll('td.cell').forEach(td => td.classList.remove('dimmed','locked-highlight'));
+  document.querySelectorAll('td.cell').forEach(td => td.classList.remove('dimmed','hl-cell'));
 }
 
 document.querySelectorAll('td.cell').forEach(td => {
   td.addEventListener('mouseenter', e => {
     if (locked) return;
-    const si = +td.dataset.row, ti = +td.dataset.col;
-    fillTip(si, ti); posTip(e); tooltip.classList.add('show'); applyHL(si, ti);
+    const si = +td.dataset.si, ti = +td.dataset.ti, ri = +td.dataset.ri;
+    fillTip(si, ti, ri); posTip(e); tip.classList.add('show'); applyHL(si, ti, ri);
   });
   td.addEventListener('mousemove', e => { if (!locked) posTip(e); });
   td.addEventListener('mouseleave', () => {
     if (locked) return;
-    tooltip.classList.remove('show'); clearHL();
+    tip.classList.remove('show'); clearHL();
   });
   td.addEventListener('click', e => {
     e.stopPropagation();
-    const si = +td.dataset.row, ti = +td.dataset.col;
-    if (locked && lockedSi === si && lockedTi === ti) {
-      locked = false; tooltip.classList.remove('show'); clearHL();
+    const si = +td.dataset.si, ti = +td.dataset.ti, ri = +td.dataset.ri;
+    if (locked && lSi === si && lTi === ti && lRi === ri) {
+      locked = false; tip.classList.remove('show'); clearHL();
     } else {
-      locked = true; lockedSi = si; lockedTi = ti;
-      fillTip(si, ti); posTip(e); tooltip.classList.add('show'); applyHL(si, ti);
+      locked = true; lSi = si; lTi = ti; lRi = ri;
+      fillTip(si, ti, ri); posTip(e); tip.classList.add('show'); applyHL(si, ti, ri);
     }
   });
 });
-document.addEventListener('click', () => { if (locked) { locked = false; tooltip.classList.remove('show'); clearHL(); } });
-document.addEventListener('keydown', e => { if (e.key === 'Escape' && locked) { locked = false; tooltip.classList.remove('show'); clearHL(); } });
+document.addEventListener('click', () => { if (locked) { locked = false; tip.classList.remove('show'); clearHL(); } });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && locked) { locked = false; tip.classList.remove('show'); clearHL(); } });
 
-/* ── Dual-axis responsive scaling ──
-   --sw  →  driven by container WIDTH  →  controls font sizes & horizontal spacing
-   --sh  →  driven by container HEIGHT →  controls vertical padding & row heights
-   The two axes are fully independent — no locked aspect ratio.
-*/
-const scaler  = document.getElementById('scaler');
-const page    = document.getElementById('page');
-const NAT_W   = 820;   // "natural" width  at which --sw = 1
-const NAT_H   = 440;   // "natural" height at which --sh = 1
+/* ── Dual-axis responsive scaling ── */
+const scaler = document.getElementById('scaler');
+const page   = document.getElementById('page');
+const NAT_W  = 1050;
+const NAT_H  = 420;
 
 function rescale() {
   const sw = Math.max(0.25, Math.min(scaler.offsetWidth  / NAT_W, 3));
@@ -346,11 +290,10 @@ function rescale() {
   page.style.setProperty('--sw', sw);
   page.style.setProperty('--sh', sh);
 
-  // Distribute available height evenly across 8 data rows
   const bottomH  = page.querySelector('.bottom-wrap').offsetHeight;
   const headerH  = table.tHead.offsetHeight;
-  const available = scaler.offsetHeight - 32 - bottomH - headerH; // 32 = page vertical padding
-  const rowH = Math.max(28, available / scenarios.length);
+  const available = scaler.offsetHeight - 26 - bottomH - headerH;
+  const rowH = Math.max(24, available / scenarios.length);
   tbody.querySelectorAll('tr').forEach(tr => { tr.style.height = rowH + 'px'; });
 }
 
