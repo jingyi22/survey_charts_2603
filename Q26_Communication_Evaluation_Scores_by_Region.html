@@ -9,11 +9,12 @@
   body {
     font-family: Arial, Helvetica, sans-serif;
     background: #fff;
-    min-height: 100vh;
+    height: 100vh;          /* 高度撑满视口，使 window.innerHeight 可驱动 --sh */
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 20px;
+    overflow: hidden;
   }
 
   .scaler {
@@ -24,8 +25,8 @@
   .page {
     width: 100%;
     background: #fff;
-    /* 纵向 padding 固定，横向随宽度缩放 */
-    padding: 16px calc(var(--s) * 20px) 12px;
+    /* --sw 驱动横向，--sh 驱动纵向，两者完全独立 */
+    padding: calc(var(--sh) * 16px) calc(var(--sw) * 20px) calc(var(--sh) * 12px);
   }
 
   /* ── Table ── */
@@ -35,21 +36,23 @@
 
   .th-region {
     background: #fff;
-    width: calc(var(--s) * 72px);
+    width: calc(var(--sw) * 72px);           /* 横向：--sw */
     border-bottom: 2px solid #d1d5db;
-    font-size: 13px; font-weight: 700;   /* 固定字号 → 不撑高行高 */
+    font-size: calc(var(--sh) * 13px);       /* 纵向：--sh */
+    font-weight: 700;
     color: #1f2937;
     text-align: left;
-    padding: 8px calc(var(--s) * 10px) 10px;  /* 纵向固定 */
+    padding: calc(var(--sh) * 8px) calc(var(--sw) * 10px) calc(var(--sh) * 10px);
     vertical-align: bottom;
     transition: background 0.15s;
   }
 
   .th-metric {
     background: #fff; color: #1f2937;
-    font-size: 13px; font-weight: 700;   /* 固定字号 */
+    font-size: calc(var(--sh) * 13px);       /* 纵向：--sh */
+    font-weight: 700;
     text-align: center; vertical-align: bottom;
-    padding: 8px calc(var(--s) * 8px) 10px;   /* 纵向固定 */
+    padding: calc(var(--sh) * 8px) calc(var(--sw) * 8px) calc(var(--sh) * 10px);
     line-height: 1.4;
     border-left: 1px solid #e5e7eb;
     border-bottom: 2px solid #d1d5db;
@@ -62,8 +65,8 @@
   }
 
   .region-cell {
-    padding: 0 calc(var(--s) * 10px);   /* 纵向已为 0 */
-    font-size: 13px; font-weight: 700;  /* 固定字号 */
+    padding: 0 calc(var(--sw) * 10px);
+    font-size: calc(var(--sh) * 13px); font-weight: 700;
     color: #1f2937;
     text-align: left;
     vertical-align: middle;
@@ -85,7 +88,7 @@
 
   td.cell {
     text-align: center; vertical-align: middle;
-    padding: 8px calc(var(--s) * 8px);  /* 纵向固定 */
+    padding: calc(var(--sh) * 8px) calc(var(--sw) * 8px);  /* 纵：--sh，横：--sw */
     border-left: 1px solid rgba(255,255,255,0.3);
     cursor: pointer;
     position: relative;
@@ -108,7 +111,7 @@
     outline-offset: -1px;
   }
   .cell-val {
-    font-size: 15px; font-weight: 700; display: block;  /* 固定字号 */
+    font-size: calc(var(--sh) * 15px); font-weight: 700; display: block;
     pointer-events: none;
   }
 
@@ -146,18 +149,18 @@
   /* ── Legend ── */
   .legend-wrap {
     display: flex; align-items: center;
-    gap: 10px; margin-top: 10px;        /* 固定 */
+    gap: calc(var(--sh) * 10px); margin-top: calc(var(--sh) * 10px);
   }
   .legend-label-lo, .legend-label-hi {
-    font-size: 11px; color: #6b7280; white-space: nowrap;
+    font-size: calc(var(--sh) * 11px); color: #6b7280; white-space: nowrap;
   }
   .legend-bar {
-    flex: 1; height: 10px; border-radius: 2px;  /* 固定高度 */
+    flex: 1; height: calc(var(--sh) * 10px); border-radius: 2px;
     background: linear-gradient(to right, #dcfce7, #15803d);
   }
   .footnote {
-    font-size: 11px; color: #9ca3af;
-    margin-top: 6px;                    /* 固定 */
+    font-size: calc(var(--sh) * 11px); color: #9ca3af;
+    margin-top: calc(var(--sh) * 6px);
   }
   .footnote b { color: #6b7280; }
   .footnote .pin-hint { color: #92400e; }
@@ -356,17 +359,21 @@ document.addEventListener('mousemove', e => {
   tooltip.style.top  = (y + th > window.innerHeight ? e.clientY - th - 10 : y) + 'px';
 });
 
-/* ── Rescale (width-only, height flows naturally) ─────── */
-const scaler = document.getElementById('scaler');
-const page   = document.getElementById('page');
-const NATURAL = 1080;
+/* ── Rescale：--sw 由容器宽度驱动，--sh 由窗口高度驱动，完全独立 ── */
+const scaler   = document.getElementById('scaler');
+const page     = document.getElementById('page');
+const NATURAL_W = 1080;  /* 基准宽度 */
+const NATURAL_H = 340;   /* 基准高度（自然内容高度估算值） */
 
 function rescale() {
-  const scale = Math.max(0.3, Math.min(scaler.offsetWidth / NATURAL, 3));
-  page.style.setProperty('--s', scale);
+  const sw = Math.max(0.3, Math.min(scaler.offsetWidth  / NATURAL_W, 3));
+  const sh = Math.max(0.3, Math.min(window.innerHeight  / NATURAL_H, 3));
+  page.style.setProperty('--sw', sw);
+  page.style.setProperty('--sh', sh);
 }
 rescale();
-new ResizeObserver(rescale).observe(scaler);
+new ResizeObserver(rescale).observe(scaler);  /* 宽度变化 */
+window.addEventListener('resize', rescale);   /* 高度变化 */
 </script>
 
 </body>
